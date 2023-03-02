@@ -23,7 +23,9 @@ enum IntoColorError {
     IntConversion,
 }
 
-// I AM NOT DONE
+trait ValidateColor {
+    fn validate(self) -> bool;
+}
 
 // Your task is to complete this implementation
 // and return an Ok result of inner type Color.
@@ -35,9 +37,27 @@ enum IntoColorError {
 // Also note that correct RGB color values must be integers in the 0..=255 range.
 
 // Tuple implementation
+impl ValidateColor for (i16, i16, i16) {
+    fn validate(self) -> bool {
+        if self.0 < 0 || self.0 > 255 || self.1 < 0 || self.1 > 255 || self.2 < 0 || self.2 > 255 {
+            return false;
+        }
+
+        return true;
+    }
+}
+
+pub const COLOR_LOW : i16 = 0;
+pub const COLOR_HIGH : i16 = 255;
+
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        if !tuple.validate() {
+            return Err(IntoColorError::IntConversion);
+        }
+
+        return Ok(Color { red: tuple.0 as u8, green: tuple.1 as u8, blue: tuple.2 as u8 });
     }
 }
 
@@ -45,6 +65,13 @@ impl TryFrom<(i16, i16, i16)> for Color {
 impl TryFrom<[i16; 3]> for Color {
     type Error = IntoColorError;
     fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        for x in arr {
+            if x < COLOR_LOW || x > COLOR_HIGH {
+                return Err(IntoColorError::IntConversion);
+            }
+        }
+
+        return Ok(Color { red: arr[0] as u8, green: arr[1] as u8, blue: arr[2]  as u8 });
     }
 }
 
@@ -52,6 +79,17 @@ impl TryFrom<[i16; 3]> for Color {
 impl TryFrom<&[i16]> for Color {
     type Error = IntoColorError;
     fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        if slice.len() != 3 {
+            return Err(IntoColorError::BadLen);
+        }
+
+        for x in slice {
+            if *x < COLOR_LOW || *x > COLOR_HIGH {
+                return Err(IntoColorError::IntConversion);
+            }
+        }
+
+        return Ok(Color { red: slice[0] as u8 , green: slice[1] as u8 , blue: slice[2]  as u8});
     }
 }
 
